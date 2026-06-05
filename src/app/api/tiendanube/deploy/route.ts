@@ -11,11 +11,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  // Parse body once — reading req.json() twice throws on the second call
+  let scriptId: string;
+  let storeId: string;
   try {
     const body = await req.json();
-    const { scriptId, storeId } = body;
+    scriptId = body.scriptId;
+    storeId = body.storeId;
+  } catch {
+    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+  }
 
-    // Obtener script
+  if (!scriptId || !storeId) {
+    return NextResponse.json({ error: 'scriptId y storeId son requeridos' }, { status: 400 });
+  }
+
+  try {
     const { data: script } = await supabaseServer
       .from('scripts')
       .select('*, stores(*)')
@@ -26,25 +37,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
-    // Deploy a TiendaNube API
+    const store = script.stores as any;
+
     const response = await deployScriptToTiendanube(
-      (script.stores as any).store_id,
-      script.name,
-      script.content,
-      script.script_type,
-      (script.stores as any).api_token
+      store.store_id,
+      scriptId,
+      store.api_token
     );
 
-    // Marcar como deployado
     await supabaseServer
       .from('scripts')
       .update({
         is_active: true,
-        deployed_at: new Date(),
+        deployed_at: new Date().toISOString(),
       })
       .eq('id', scriptId);
 
-    // Auditoría
     await supabaseServer.from('audit_log').insert({
       store_id: storeId,
       user_id: session.user.id,
@@ -56,15 +64,11 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error('Error deploying to TiendaNube:', error);
 
-    // Auditoría de error
-    try {
-      const body = await req.json();
-      await supabaseServer.from('audit_log').insert({
-        user_id: session?.user?.id,
-        action: 'deploy_error',
-        details: { error: error.message },
-      });
-    } catch {}
+    await supabaseServer.from('audit_log').insert({
+      user_id: session.user.id,
+      action: 'deploy_error',
+      details: { script_id: scriptId, error: error.message },
+    });
 
     return NextResponse.json(
       { error: 'Error deploying script: ' + error.message },

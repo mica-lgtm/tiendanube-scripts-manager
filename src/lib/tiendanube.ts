@@ -3,34 +3,29 @@ import axios from 'axios';
 export const tiendanubeAPI = axios.create({
   baseURL: process.env.TIENDANUBE_API_URL || 'https://api.tiendanube.com/v1',
   headers: {
-    'User-Agent': process.env.TIENDANUBE_USER_AGENT || 'ScriptManager',
+    'User-Agent': process.env.TIENDANUBE_USER_AGENT || 'ScriptsManager (mica@zasdigital.com)',
+    'Content-Type': 'application/json',
   },
 });
 
 export async function deployScriptToTiendanube(
-  storeId: number,
-  scriptName: string,
-  scriptContent: string,
-  scriptType: 'css' | 'html' | 'js',
+  tiendanubeStoreId: number,
+  scriptId: string,
   apiToken: string
 ) {
-  try {
-    const response = await tiendanubeAPI.post(
-      `/${storeId}/scripts`,
-      {
-        name: scriptName,
-        code: scriptContent,
-        type: scriptType,
+  const appUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL;
+  if (!appUrl) throw new Error('APP_URL no configurada (NEXTAUTH_URL o NEXT_PUBLIC_APP_URL)');
+
+  const src = `${appUrl}/api/scripts/${scriptId}/serve`;
+
+  const response = await tiendanubeAPI.post(
+    `/${tiendanubeStoreId}/scripts`,
+    { src, event: 'onload', where: 'store' },
+    {
+      headers: {
+        'Authentication': `bearer ${apiToken}`,
       },
-      {
-        headers: {
-          'Authentication': apiToken,
-        },
-      }
-    );
-    return response.data;
-  } catch (error) {
-    console.error('Error deploying to TiendaNube:', error);
-    throw error;
-  }
+    }
+  );
+  return response.data;
 }
