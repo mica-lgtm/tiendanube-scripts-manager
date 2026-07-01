@@ -39,37 +39,46 @@
   function extractProductData() {
     var data = { id: null, name: null, price: null, priceTransfer: null };
 
-    // 1. JSON-LD → id, name, price base
+    // 1. Global LS de TN (fuente más confiable — tiene precio + descuento por método de pago)
     try {
-      var ldTag = document.querySelector('script[type="application/ld+json"]');
-      if (ldTag) {
-        var ld = JSON.parse(ldTag.textContent);
-        var product = ld['@type'] === 'Product'
-          ? ld
-          : (ld['@graph'] || []).find(function(x) { return x['@type'] === 'Product'; });
-        if (product) {
-          data.name  = product.name || null;
-          var offer  = product.offers || {};
-          data.price = parseFloat((offer.price || '').toString().replace(/[^0-9.]/g, '')) || null;
-          data.id    = (product['@id'] || '').split('/').pop() || null;
+      var variant = (window.LS && window.LS.variants && window.LS.variants[0])
+                 || (window.LS && window.LS.activeVariant);
+      if (variant) {
+        data.id    = variant.product_id ? String(variant.product_id) : null;
+        data.price = variant.price_number || null;
+        // price_with_payment_discount_short = "$36.120" (descuento por transferencia)
+        if (variant.price_with_payment_discount_short) {
+          data.priceTransfer = parseFloat(
+            variant.price_with_payment_discount_short.replace(/[^0-9,]/g, '').replace(',', '.')
+          ) || null;
+          // Si viene en formato argentino "36.120" (punto como miles), parsear correctamente
+          var raw = variant.price_with_payment_discount_short.replace(/[^0-9.]/g, '');
+          if (raw.indexOf('.') > -1 && raw.split('.').pop().length === 3) {
+            data.priceTransfer = parseFloat(raw.replace('.', '')) || data.priceTransfer;
+          }
         }
       }
-    } catch(e) {}
-
-    // 2. DOM → precio transferencia ("$ 36.120 por Transferencia") — Simona aplica 20% de descuento
-    try {
-      var allText = document.body.innerText || '';
-      var match = allText.match(/\$\s*([\d.,]+)\s*por\s*Transferencia/i);
-      if (match) {
-        data.priceTransfer = parseFloat(match[1].replace(/\./g, '').replace(',', '.')) || null;
+      if (window.LS && window.LS.product) {
+        data.name = window.LS.product.name || null;
       }
     } catch(e) {}
 
-    // 3. Fallback meta tag para price
+    // 2. Fallback: meta tag de precio
     if (!data.price) {
       try {
         var meta = document.querySelector('meta[property="product:price:amount"]');
         if (meta) data.price = parseFloat(meta.content) || null;
+      } catch(e) {}
+    }
+
+    // 3. Fallback: DOM para precio transferencia
+    if (!data.priceTransfer && data.price) {
+      try {
+        var allText = document.body.innerText || '';
+        var match = allText.match(/\$\s*([\d.,]+)\s*por\s*Transferencia/i);
+        if (match) {
+          data.priceTransfer = parseFloat(match[1].replace(/\./g, '').replace(',', '.')) || null;
+        }
       } catch(e) {}
     }
 
