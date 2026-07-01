@@ -138,107 +138,118 @@
     }
     if (!anchor) return;
 
-    // Colores Simona
-    var C = {
-      ink:       '#2a2a2a',
-      cream:     '#f7f1ea',
-      sand:      '#efe6dc',
-      clay:      '#e4d6ca',
-      stone:     '#c9bab0',
-      taupe:     '#70625f',
-      mocha:     '#9a877f',
-      blush:     '#fbbfaf',
-      blushSoft: '#fdded5',
-    };
-
-    var FD = '"Red Hat Display", system-ui, sans-serif';
-    var FT = '"Red Hat Text", "Red Hat Display", system-ui, sans-serif';
+    // Inyectar estilos con !important para ganarle al tema de Simona
+    if (!document.getElementById('dante-cro-css')) {
+      var css = document.createElement('style');
+      css.id = 'dante-cro-css';
+      css.textContent = [
+        '#dante-cro-section{font-family:"Red Hat Text","Red Hat Display",system-ui,sans-serif!important;margin:0!important;}',
+        '#dante-cro-section *{box-sizing:border-box!important;}',
+        // Columna normal (clay)
+        '#dante-cro-section .dc-eyebrow-n{color:#70625f!important;font-family:"Red Hat Text",system-ui!important;font-size:10px!important;font-weight:700!important;letter-spacing:.14em!important;text-transform:uppercase!important;margin-bottom:6px!important;}',
+        '#dante-cro-section .dc-price-n{color:#c9bab0!important;font-family:"Red Hat Display",system-ui!important;font-weight:900!important;font-size:28px!important;letter-spacing:-.02em!important;line-height:1!important;text-decoration:line-through!important;}',
+        '#dante-cro-section .dc-sub-n{color:#9a877f!important;font-size:11px!important;margin-top:5px!important;}',
+        // Columna transferencia (ink)
+        '#dante-cro-section .dc-eyebrow-t{color:#fbbfaf!important;font-family:"Red Hat Text",system-ui!important;font-size:10px!important;font-weight:700!important;letter-spacing:.14em!important;text-transform:uppercase!important;margin-bottom:6px!important;}',
+        '#dante-cro-section .dc-price-t{color:#f7f1ea!important;font-family:"Red Hat Display",system-ui!important;font-weight:900!important;font-size:28px!important;letter-spacing:-.02em!important;line-height:1!important;}',
+        '#dante-cro-section .dc-sub-t{color:#fdded5!important;font-size:11px!important;margin-top:5px!important;}',
+        '#dante-cro-section .dc-badge{display:inline-block!important;margin-top:10px!important;background:#fbbfaf!important;color:#2a2a2a!important;font-size:11px!important;font-weight:700!important;letter-spacing:.06em!important;text-transform:uppercase!important;padding:4px 12px!important;}',
+        // Cuotas
+        '#dante-cro-section .dc-cuota-main{color:#2a2a2a!important;font-family:"Red Hat Display",system-ui!important;font-weight:700!important;font-size:14px!important;}',
+        '#dante-cro-section .dc-cuota-sub{color:#9a877f!important;font-size:11px!important;margin-top:2px!important;}',
+        // Urgencia
+        '#dante-cro-section .dc-flash{color:#f7f1ea!important;font-size:13px!important;line-height:1.4!important;}',
+        '#dante-cro-section .dc-flash strong{color:#fbbfaf!important;}',
+        '#dante-cro-section .dc-flash-sub{color:#9a877f!important;font-size:10px!important;margin-top:3px!important;}',
+        '#dante-cro-section .dc-cd-label{color:#70625f!important;font-size:10px!important;font-weight:700!important;letter-spacing:.12em!important;text-transform:uppercase!important;}',
+        '#dante-cro-section .dc-cd-time{color:#f7f1ea!important;font-family:"Red Hat Display",system-ui!important;font-weight:800!important;font-size:20px!important;font-variant-numeric:tabular-nums!important;line-height:1.1!important;}',
+        // Social proof
+        '#dante-cro-section .dc-social-num{color:#2a2a2a!important;font-family:"Red Hat Display",system-ui!important;font-weight:800!important;font-size:16px!important;}',
+        '#dante-cro-section .dc-social-label{color:#9a877f!important;font-size:10px!important;font-weight:700!important;letter-spacing:.12em!important;text-transform:uppercase!important;margin-top:2px!important;}',
+        // Envío
+        '#dante-cro-section .dc-ship{color:#70625f!important;font-size:12px!important;}',
+        '#dante-cro-section .dc-ship strong{color:#2a2a2a!important;}',
+      ].join('');
+      document.head.appendChild(css);
+    }
 
     var price         = data.price         ? '$' + Math.round(data.price).toLocaleString('es-AR')         : '';
     var priceTransfer = data.priceTransfer ? '$' + Math.round(data.priceTransfer).toLocaleString('es-AR') : '';
     var hasTransfer   = !!data.priceTransfer;
     var pct           = (hasTransfer && data.price) ? Math.round((1 - data.priceTransfer / data.price) * 100) : null;
-    var savings       = (hasTransfer && data.price) ? Math.round(data.price - data.priceTransfer).toLocaleString('es-AR') : null;
+    var cuota         = data.price ? Math.round(data.price / 12).toLocaleString('es-AR') : '';
 
     var midnight    = new Date(); midnight.setHours(24, 0, 0, 0);
     var countdownId = 'dante-cd-' + Date.now();
 
     var section = document.createElement('div');
     section.id  = 'dante-cro-section';
-    section.style.cssText = 'font-family:' + FT + ';margin:0;';
 
     var html = [];
 
     // ── Bloque precio comparado (V2) ──────────────────────────────────────
     if (hasTransfer) {
       html.push(
-        '<div style="display:flex;gap:2px;border-bottom:2px solid ' + C.cream + ';">',
-
-          // Columna precio normal
-          '<div style="flex:1;padding:16px 16px;background:' + C.clay + ';">',
-            '<div style="font-family:' + FT + ';font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:' + C.taupe + ';margin-bottom:6px;">Precio normal</div>',
-            '<div style="font-family:' + FD + ';font-weight:900;font-size:28px;letter-spacing:-.02em;line-height:1;color:' + C.stone + ';text-decoration:line-through;">' + price + '</div>',
-            '<div style="font-family:' + FT + ';font-size:11px;color:' + C.mocha + ';margin-top:5px;">12 x $' + (data.price ? Math.round(data.price / 12).toLocaleString('es-AR') : '') + ' sin interés</div>',
+        '<div style="display:flex;gap:2px;border-bottom:2px solid #f7f1ea;">',
+          '<div style="flex:1;padding:16px;background:#e4d6ca;">',
+            '<div class="dc-eyebrow-n">Precio normal</div>',
+            '<div class="dc-price-n">' + price + '</div>',
+            '<div class="dc-sub-n">12 x $' + cuota + ' sin interés</div>',
           '</div>',
-
-          // Columna transferencia
-          '<div style="flex:1;padding:16px 16px;background:' + C.ink + ';">',
-            '<div style="font-family:' + FT + ';font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:' + C.blush + ';margin-bottom:6px;">Transferencia</div>',
-            '<div style="font-family:' + FD + ';font-weight:900;font-size:28px;letter-spacing:-.02em;line-height:1;color:' + C.cream + ';">' + priceTransfer + '</div>',
-            '<div style="font-family:' + FT + ';font-size:11px;color:' + C.blushSoft + ';margin-top:5px;">Pago único · Más económico</div>',
-            '<div style="display:inline-block;margin-top:10px;background:' + C.blush + ';color:' + C.ink + ';font-family:' + FT + ';font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:4px 12px;">−' + (pct || '20') + '% OFF</div>',
+          '<div style="flex:1;padding:16px;background:#2a2a2a;">',
+            '<div class="dc-eyebrow-t">Transferencia</div>',
+            '<div class="dc-price-t">' + priceTransfer + '</div>',
+            '<div class="dc-sub-t">Pago único · Más económico</div>',
+            '<div class="dc-badge">−' + (pct || '20') + '% OFF</div>',
           '</div>',
-
         '</div>'
       );
     }
 
     // ── Cuotas ────────────────────────────────────────────────────────────
     html.push(
-      '<div style="background:' + C.cream + ';padding:12px 18px;display:flex;align-items:center;justify-content:space-between;border-left:3px solid ' + C.blush + ';border-bottom:2px solid ' + C.sand + ';">',
-        '<div>',
-          '<div style="font-family:' + FD + ';font-weight:700;font-size:14px;color:' + C.ink + ';">12 cuotas de $' + (data.price ? Math.round(data.price / 12).toLocaleString('es-AR') : '') + '</div>',
-          '<div style="font-family:' + FT + ';font-size:11px;color:' + C.mocha + ';margin-top:2px;">Sin interés · Con tarjeta</div>',
-        '</div>',
+      '<div style="background:#f7f1ea;padding:12px 18px;border-left:3px solid #fbbfaf;border-bottom:2px solid #efe6dc;">',
+        '<div class="dc-cuota-main">12 cuotas de $' + cuota + '</div>',
+        '<div class="dc-cuota-sub">Sin interés · Con tarjeta</div>',
       '</div>'
     );
 
     // ── Urgencia + countdown ──────────────────────────────────────────────
     html.push(
-      '<div style="background:' + C.ink + ';padding:12px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid ' + C.cream + ';">',
+      '<div style="background:#2a2a2a;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #f7f1ea;">',
         '<div>',
-          '<div style="font-family:' + FT + ';font-size:13px;color:' + C.cream + ';line-height:1.4;">⚡ Comprá hoy, llega <strong style="color:' + C.blush + ';">mañana</strong></div>',
-          '<div style="font-family:' + FT + ';font-size:10px;color:' + C.mocha + ';margin-top:3px;">Envío flash · Solo CABA y GBA</div>',
+          '<div class="dc-flash">⚡ Comprá hoy, llega <strong>mañana</strong></div>',
+          '<div class="dc-flash-sub">Envío flash · Solo CABA y GBA</div>',
         '</div>',
         '<div style="text-align:right;">',
-          '<div style="font-family:' + FT + ';font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:' + C.taupe + ';">Quedan</div>',
-          '<div id="' + countdownId + '" style="font-family:' + FD + ';font-weight:800;font-size:20px;color:' + C.cream + ';font-variant-numeric:tabular-nums;line-height:1.1;">--:--:--</div>',
+          '<div class="dc-cd-label">Quedan</div>',
+          '<div class="dc-cd-time" id="' + countdownId + '">--:--:--</div>',
         '</div>',
       '</div>'
     );
 
     // ── Social proof ──────────────────────────────────────────────────────
     html.push(
-      '<div style="background:' + C.sand + ';display:flex;border-bottom:2px solid ' + C.cream + ';">',
+      '<div style="background:#efe6dc;display:flex;border-bottom:2px solid #f7f1ea;">',
         '<div style="flex:1;padding:12px 0;text-align:center;">',
-          '<div style="font-family:' + FD + ';font-weight:800;font-size:16px;color:' + C.ink + ';">330k</div>',
-          '<div style="font-family:' + FT + ';font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:' + C.mocha + ';margin-top:2px;">Ventas</div>',
+          '<div class="dc-social-num">330k</div>',
+          '<div class="dc-social-label">Ventas</div>',
         '</div>',
-        '<div style="flex:1;padding:12px 0;text-align:center;border-left:1px solid ' + C.clay + ';">',
-          '<div style="font-family:' + FD + ';font-weight:800;font-size:16px;color:' + C.ink + ';">60 días</div>',
-          '<div style="font-family:' + FT + ';font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:' + C.mocha + ';margin-top:2px;">Cambios</div>',
+        '<div style="flex:1;padding:12px 0;text-align:center;border-left:1px solid #e4d6ca;">',
+          '<div class="dc-social-num">60 días</div>',
+          '<div class="dc-social-label">Cambios</div>',
         '</div>',
-        '<div style="flex:1;padding:12px 0;text-align:center;border-left:1px solid ' + C.clay + ';">',
-          '<div style="font-family:' + FD + ';font-weight:800;font-size:16px;color:' + C.ink + ';">4.9 ★</div>',
-          '<div style="font-family:' + FT + ';font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:' + C.mocha + ';margin-top:2px;">Rating</div>',
+        '<div style="flex:1;padding:12px 0;text-align:center;border-left:1px solid #e4d6ca;">',
+          '<div class="dc-social-num">4.9 ★</div>',
+          '<div class="dc-social-label">Rating</div>',
         '</div>',
       '</div>'
     );
 
     // ── Envío gratis ──────────────────────────────────────────────────────
     html.push(
-      '<div style="background:' + C.cream + ';padding:10px 18px;font-family:' + FT + ';font-size:12px;color:' + C.taupe + ';">',
-        '🚚 &nbsp;<strong style="color:' + C.ink + ';">Envío gratis</strong> en compras mayores a $149.900',
+      '<div style="background:#f7f1ea;padding:10px 18px;">',
+        '<span class="dc-ship">🚚 &nbsp;<strong>Envío gratis</strong> en compras mayores a $149.900</span>',
       '</div>'
     );
 
