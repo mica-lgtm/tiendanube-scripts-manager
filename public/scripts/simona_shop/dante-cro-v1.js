@@ -288,6 +288,13 @@
       el.style.setProperty('color', '#2a2a2a', 'important');
     });
 
+    // Ocultar sección original de TN que el CRO reemplaza
+    ['.js-product-payments-container', '.js-free-shipping-minimum-message'].forEach(function(sel) {
+      document.querySelectorAll(sel).forEach(function(el) {
+        el.style.setProperty('display', 'none', 'important');
+      });
+    });
+
     // Countdown
     var cdEl = document.getElementById(countdownId);
     function tick() {
