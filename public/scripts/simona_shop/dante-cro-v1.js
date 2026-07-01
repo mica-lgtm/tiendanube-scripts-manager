@@ -130,7 +130,7 @@
 
   // ── CRO INJECTION ────────────────────────────────────────────────────────
   function injectCRO(data) {
-    var anchorSelectors = ['.js-add-to-cart', '[data-js="add-to-cart"]', '.buy-button', '.product-form__submit'];
+    var anchorSelectors = ['.js-addtocart.btn-add-to-cart', '.js-addtocart:not(.js-quickshop-icon-add)', '.js-add-to-cart', '[data-js="add-to-cart"]', '.buy-button', '.product-form__submit'];
     var anchor = null;
     for (var i = 0; i < anchorSelectors.length; i++) {
       anchor = document.querySelector(anchorSelectors[i]);
