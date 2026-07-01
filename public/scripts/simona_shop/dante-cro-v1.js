@@ -130,6 +130,8 @@
 
   // ── CRO INJECTION ────────────────────────────────────────────────────────
   function injectCRO(data) {
+    if (document.getElementById('dante-cro-section')) return;
+
     var anchorSelectors = ['.js-addtocart.btn-add-to-cart', '.js-addtocart:not(.js-quickshop-icon-add)', '.js-add-to-cart', '[data-js="add-to-cart"]', '.buy-button', '.product-form__submit'];
     var anchor = null;
     for (var i = 0; i < anchorSelectors.length; i++) {
@@ -255,6 +257,36 @@
 
     section.innerHTML = html.join('');
     anchor.parentNode.insertBefore(section, anchor);
+
+    // Forzar colores con setProperty — gana contra cualquier !important del tema
+    function sc(sel, prop, val) {
+      section.querySelectorAll(sel).forEach(function(el) {
+        el.style.setProperty(prop, val, 'important');
+      });
+    }
+    sc('.dc-eyebrow-n', 'color', '#70625f');
+    sc('.dc-price-n',   'color', '#c9bab0');
+    sc('.dc-price-n',   'text-decoration', 'line-through');
+    sc('.dc-sub-n',     'color', '#9a877f');
+    sc('.dc-eyebrow-t', 'color', '#fbbfaf');
+    sc('.dc-price-t',   'color', '#f7f1ea');
+    sc('.dc-sub-t',     'color', '#fdded5');
+    sc('.dc-badge',     'color', '#2a2a2a');
+    sc('.dc-cuota-main','color', '#2a2a2a');
+    sc('.dc-cuota-sub', 'color', '#9a877f');
+    sc('.dc-flash',     'color', '#f7f1ea');
+    section.querySelectorAll('.dc-flash strong').forEach(function(el) {
+      el.style.setProperty('color', '#fbbfaf', 'important');
+    });
+    sc('.dc-flash-sub', 'color', '#9a877f');
+    sc('.dc-cd-label',  'color', '#70625f');
+    sc('.dc-cd-time',   'color', '#f7f1ea');
+    sc('.dc-social-num','color', '#2a2a2a');
+    sc('.dc-social-label','color','#9a877f');
+    sc('.dc-ship',      'color', '#70625f');
+    section.querySelectorAll('.dc-ship strong').forEach(function(el) {
+      el.style.setProperty('color', '#2a2a2a', 'important');
+    });
 
     // Countdown
     var cdEl = document.getElementById(countdownId);
